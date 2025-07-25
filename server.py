@@ -6,7 +6,7 @@ from typing import Dict
 from fastapi.responses import JSONResponse
 from common.basic_dtos.responses import HealthResponse, MessageResponse
 
-from root_router import root_router
+from .root_router import root_router
 
 
 # FastAPI 앱 인스턴스 생성
