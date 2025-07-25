@@ -2,11 +2,9 @@ from datetime import datetime
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
-from typing import Dict
 from fastapi.responses import JSONResponse
-from common.basic_dtos.responses import HealthResponse, MessageResponse
 
-from .root_router import root_router
+from root_router import root_router
 
 
 # FastAPI 앱 인스턴스 생성
@@ -60,7 +58,7 @@ app.include_router(root_router)
 
 # 기본 라우트
 @app.get("/", tags=["Root"])
-async def root() -> Dict[str, str]:
+async def root() -> JSONResponse:
     """
     루트 엔드포인트
     
@@ -79,8 +77,8 @@ async def root() -> Dict[str, str]:
     )
 
 # 헬스 체크 엔드포인트
-@app.get("/health", response_model=HealthResponse, tags=["Root"])
-async def health_check() -> HealthResponse:
+@app.get("/health", tags=["Root"])
+async def health_check() -> JSONResponse:
     """서버 상태를 확인하는 헬스체크 엔드포인트"""
     return JSONResponse(
         content={
