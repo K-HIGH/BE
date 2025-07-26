@@ -5,10 +5,7 @@ from sqlmodel import Session
 from auth import get_current_user
 from common.memcache.database import memcache_client
 from common.postgres.database import get_session
-from users.dto.user_alert_update_res import UserAlertUpdateRes
-from users.dto.user_profile_alert_res import UserProfileAlertRes
-from users.dto.user_profile_update_req import UserProfileUpdateReq
-from users.dto.user_profile_update_res import UserProfileUpdateRes
+from users.user_dto import UserAlertUpdateRes, UserProfileAlertRes, UserProfileUpdateReq, UserProfileUpdateRes
 from users.user_crud import user_alert_crud, user_crud, user_profile_crud
 
 from .user import User

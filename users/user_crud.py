@@ -9,7 +9,7 @@ from sqlmodel import Session, select
 from sqlalchemy.orm import joinedload
 
 from common.postgres.crud.base import CRUDBase
-from users.dto.user_profile_update_req import UserProfileUpdateReq
+from users.user_dto import UserProfileUpdateReq
 from .user import User, UserProfile, UserAlert
 from common.postgres.models import OAuthPlatform
 
