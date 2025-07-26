@@ -9,7 +9,7 @@ from sqlalchemy import Column
 from geoalchemy2 import Geometry
 
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlmodel import SQLModel, Field, Relationship
+from sqlmodel import Field, Relationship
 
 from common.postgres.models import TimestampMixin
 
