@@ -81,6 +81,72 @@ async def get_route_history(
     )
 
 
+@router.get(
+    "/{route_id}",
+    response_model=RouteHistoryRes,
+    responses={
+        200: {
+            "description": "Route History",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "route_id": 1,
+                        "user_id": 1,
+                        "src": {"name": "출발지", "address": "서울시 종로구 종로동"},
+                        "dst": {"name": "도착지", "address": "서울시 종로구 종로동"},
+                        "routes": [
+                            {
+                                "name": "경로 1",
+                                "distance": 1000,
+                                "duration": 10,
+                                "polyline": "M123.456,789.012 L456.789,123.456"
+                            }
+                        ],
+                        "created_at": "2021-01-01T00:00:00"
+                    }
+                }
+            }
+        },
+        401: {
+            "description": "Unauthorized",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Unauthorized"}
+                }
+            }
+        },
+        404: {
+            "description": "Not Found",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Route history not found"}
+                }
+            }
+        }
+    }
+)
+async def get_route_history_by_id(
+    route_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_session)
+):
+    """경로 탐색 기록 상세 조회"""
+    route_history = route_history_crud.get_by_route_id(db, route_id)
+    if route_history.user_id != user.user_id:
+        raise HTTPException(status_code=404, detail=f"Route history with route_id {route_id} not found")
+    
+    return JSONResponse(
+        status_code=200,
+        content=RouteHistoryRes(
+            route_id=route_history.route_id,
+            user_id=route_history.user_id,
+            src=route_history.src,
+            dst=route_history.dst,
+            routes=route_history.routes,
+            created_at=route_history.created_at
+        )
+    )
+
 @router.post(
     "/",
     response_model=RouteHistoryRes,
