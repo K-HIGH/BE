@@ -6,7 +6,7 @@
 
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from sqlmodel import Session
 
 from common.postgres.database import get_session
@@ -268,7 +268,4 @@ async def delete_safety_area(
     if not safety_area or safety_area.user_id != user.user_id:
         raise HTTPException(status_code=404, detail="Safety Area not found")
     safety_area_crud.delete_safety_area(db, safety_area_id)
-    return JSONResponse(
-        status_code=200, 
-        content={"detail": "Safety Area deleted"}
-    )
+    return Response(status_code=204)
