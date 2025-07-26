@@ -1,11 +1,23 @@
+import os
 from datetime import datetime
+from dotenv import load_dotenv
+from contextlib import asynccontextmanager
+
+load_dotenv()
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from fastapi.responses import JSONResponse
 
+from common.postgres import init_db # noqa: E402
 from root_router import root_router
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()  # 초기 DB 작업
+    yield
 
 # FastAPI 앱 인스턴스 생성
 app = FastAPI(
@@ -41,7 +53,8 @@ app = FastAPI(
         "showExtensions": True,          # 확장 정보 표시
         "showCommonExtensions": True,    # 공통 확장 정보 표시
         "tryItOutEnabled": True,         # Try it out 기능 활성화
-    }
+    },
+    lifespan=lifespan,
 )
 
 # CORS 미들웨어 추가
@@ -101,7 +114,7 @@ if __name__ == "__main__":
     uvicorn.run(
         "server:app",
         host="0.0.0.0",
-        port=8001,
-        reload=True,  # 개발 모드에서 코드 변경시 자동 재시작
-        log_level="info"
+        port=int(os.getenv("PORT", "8001")),
+        reload=bool(os.getenv("DEBUG", "False")),  # 개발 모드에서 코드 변경시 자동 재시작
+        log_level=os.getenv("LOG_LEVEL", "info")
     ) 
