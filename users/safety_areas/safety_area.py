@@ -24,7 +24,7 @@ class SafetyArea(TimestampMixin, table=True):
         sa_column=Column(Geometry(geometry_type="POINT", srid=4326)),
         description="안전 구역 중심 좌표"
     )
-    dist_safety_area: float = Field(description="안전 구역 반지름")
+    dist_safety_radius: float = Field(description="안전 구역 반지름")
     
     # 관계
     user: "User" = Relationship(back_populates="safety_areas") 
