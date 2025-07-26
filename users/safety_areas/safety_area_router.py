@@ -232,11 +232,11 @@ async def update_safety_area(
 @router.delete(
     "/{safety_area_id}",
     responses={
-        200: {
+        204: {
             "description": "Safety Area deleted",
             "content": {
                 "application/json": {
-                    "example": {"detail": "Safety Area deleted"}
+                    "example": None
                 }
             }
         },
