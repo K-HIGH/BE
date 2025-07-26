@@ -4,20 +4,23 @@
 사용자 정보, 프로필, 알림 설정에 대한 CRUD 작업
 """
 
-from typing import Optional, List
+from typing import Optional
 from sqlmodel import Session, select
 from sqlalchemy.orm import joinedload
 
 from common.postgres.crud.base import CRUDBase
+from users.dto.user_profile_update_req import UserProfileUpdateReq
 from .user import User, UserProfile, UserAlert
-from .caregivers.caregiver import Caregiver
-from .safety_area import SafetyArea
-from common.postgres.crud.base import OAuthPlatform
+from common.postgres.models import OAuthPlatform
 
 
 class CRUDUser(CRUDBase[User, None, None]):
     """사용자 CRUD 작업"""
-    
+    def get_by_user_id(self, db: Session, user_id: int) -> Optional[User]:
+        """사용자 ID로 사용자 조회"""
+        statement = select(User).where(User.user_id == user_id)
+        return db.exec(statement).first()
+
     def get_by_uuid(self, db: Session, user_uuid: str) -> Optional[User]:
         """UUID로 사용자 조회"""
         statement = select(User).where(User.user_uuid == user_uuid)
@@ -40,6 +43,34 @@ class CRUDUser(CRUDBase[User, None, None]):
         """알림 설정과 함께 사용자 조회"""
         statement = select(User).options(joinedload(User.alert)).where(User.user_id == user_id)
         return db.exec(statement).first()
+    
+    def get_with_profile_and_alert(self, db: Session, user_id: int) -> Optional[User]:
+        """모든 정보와 함께 사용자 조회"""
+        statement = select(User.profile, User.alert).where(User.user_id == user_id)
+        return db.exec(statement).first()
+    
+    def create_user(self, db: Session, user: User) -> User:
+        """사용자 생성"""        
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        return user
+
+    def delete_user(self, db: Session, user_id: int) -> bool:
+        """사용자 삭제"""
+        user = self.get_by_user_id(db, user_id)
+        if user:
+            user_profile = user_profile_crud.get_by_user_id(db, user_id)
+            user_alert = user_alert_crud.get_by_user_id(db, user_id)
+            if user_profile:
+                db.delete(user_profile)
+            if user_alert:
+                db.delete(user_alert)
+            db.delete(user)
+            db.commit()
+            return True
+        else:
+            return False
 
 
 class CRUDUserProfile(CRUDBase[UserProfile, None, None]):
@@ -50,17 +81,32 @@ class CRUDUserProfile(CRUDBase[UserProfile, None, None]):
         statement = select(UserProfile).where(UserProfile.user_id == user_id)
         return db.exec(statement).first()
     
-    def update_by_user_id(self, db: Session, user_id: int, user_name: str, phone: str, is_caregiver: bool = False) -> Optional[UserProfile]:
+    def create_user_profile(self, db: Session, user_profile: UserProfile) -> Optional[UserProfile]:
+        """사용자 프로필 생성"""
+        user_profile = UserProfile(user_id=user_profile.user_id, user_name=user_profile.user_name, phone=user_profile.phone, is_caregiver=user_profile.is_caregiver)
+        db.add(user_profile)
+        db.commit()
+        db.refresh(user_profile)
+        return user_profile
+
+    def update_by_user_id(self, db: Session, user_id: int, user_profile: UserProfileUpdateReq) -> Optional[UserProfile]:
         """사용자 ID로 프로필 업데이트"""
         profile = self.get_by_user_id(db, user_id)
         if profile:
-            profile.user_name = user_name
-            profile.phone = phone
-            profile.is_caregiver = is_caregiver
+            if user_profile.user_name:
+                profile.user_name = user_profile.user_name
+            if user_profile.phone:
+                profile.phone = user_profile.phone
+            if user_profile.is_caregiver is not None:
+                profile.is_caregiver = user_profile.is_caregiver
+            if user_profile.is_helper is not None:
+                profile.is_helper = user_profile.is_helper
             db.add(profile)
             db.commit()
             db.refresh(profile)
-        return profile
+            return profile
+        else:
+            raise ValueError(f"UserProfile with user_id {user_id} not found")
 
 
 class CRUDUserAlert(CRUDBase[UserAlert, None, None]):
@@ -71,6 +117,14 @@ class CRUDUserAlert(CRUDBase[UserAlert, None, None]):
         statement = select(UserAlert).where(UserAlert.user_id == user_id)
         return db.exec(statement).first()
     
+    def create_user_alert(self, db: Session, user_alert: UserAlert) -> Optional[UserAlert]:
+        """사용자 알림 설정 생성"""
+        user_alert = UserAlert(user_id=user_alert.user_id, is_alert=user_alert.is_alert)
+        db.add(user_alert)
+        db.commit()
+        db.refresh(user_alert)
+        return user_alert
+
     def update_fcm_token(self, db: Session, user_id: int, fcm_token: str) -> Optional[UserAlert]:
         """FCM 토큰 업데이트"""
         alert = self.get_by_user_id(db, user_id)
@@ -79,53 +133,21 @@ class CRUDUserAlert(CRUDBase[UserAlert, None, None]):
             db.add(alert)
             db.commit()
             db.refresh(alert)
-        return alert
+            return alert
+        else:
+            raise ValueError(f"UserAlert with user_id {user_id} not found")
     
-    def toggle_alert(self, db: Session, user_id: int) -> Optional[UserAlert]:
+    def update_alert_flag(self, db: Session, user_id: int, is_alert: bool) -> Optional[UserAlert]:
         """알림 설정 토글"""
         alert = self.get_by_user_id(db, user_id)
         if alert:
-            alert.is_alert = not alert.is_alert
+            alert.is_alert = is_alert
             db.add(alert)
             db.commit()
             db.refresh(alert)
-        return alert
-
-
-class CRUDCaregiver(CRUDBase[Caregiver, None, None]):
-    """보호자 CRUD 작업"""
-    
-    def get_by_user_id(self, db: Session, user_id: int) -> List[Caregiver]:
-        """사용자 ID로 보호자 목록 조회"""
-        statement = select(Caregiver).where(Caregiver.user_id == user_id)
-        return db.exec(statement).all()
-    
-    def get_by_target_id(self, db: Session, target_id: int) -> List[Caregiver]:
-        """대상 ID로 보호자 목록 조회"""
-        statement = select(Caregiver).where(Caregiver.target_id == target_id)
-        return db.exec(statement).all()
-    
-    def create_caregiver_relationship(self, db: Session, user_id: int, target_id: int) -> Caregiver:
-        """보호자 관계 생성"""
-        caregiver = Caregiver(user_id=user_id, target_id=target_id)
-        db.add(caregiver)
-        db.commit()
-        db.refresh(caregiver)
-        return caregiver
-    
-    def delete_caregiver_relationship(self, db: Session, user_id: int, target_id: int) -> bool:
-        """보호자 관계 삭제"""
-        statement = select(Caregiver).where(
-            Caregiver.user_id == user_id,
-            Caregiver.target_id == target_id
-        )
-        caregiver = db.exec(statement).first()
-        if caregiver:
-            db.delete(caregiver)
-            db.commit()
-            return True
-        return False
-
+            return alert
+        else:
+            raise ValueError(f"UserAlert with user_id {user_id} not found")
 
 # CRUD 인스턴스 생성
 user_crud = CRUDUser(User)

@@ -26,18 +26,24 @@ engine = create_engine(
     pool_recycle=300,  # 5분마다 연결 재생성
 )
 
-# 세션 팩토리 생성
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-
-def create_db_and_tables():
-    """데이터베이스와 테이블 생성"""
-    SQLModel.metadata.create_all(engine)
-
-
+# 세션 팩토리 생성 (sqlmodel.Session을 직접 사용)
 def get_session() -> Generator[Session, None, None]:
-    """데이터베이스 세션 생성기"""
-    with SessionLocal() as session:
+    """
+    데이터베이스 세션 생성기
+
+    sqlmodel.Session을 반환하며, 예외 발생 시 롤백 처리 및 세션 종료를 보장합니다.
+
+    Yields:
+        Session: SQLModel 세션 객체
+
+    Raises:
+        Exception: 세션 내에서 발생한 예외를 다시 발생시킴
+
+    예시:
+        with next(get_session()) as session:
+            # 쿼리 실행
+    """
+    with Session(engine) as session:
         try:
             yield session
         except Exception:
@@ -45,6 +51,11 @@ def get_session() -> Generator[Session, None, None]:
             raise
         finally:
             session.close()
+
+
+def create_db_and_tables():
+    """데이터베이스와 테이블 생성"""
+    SQLModel.metadata.create_all(engine)
 
 
 # 데이터베이스 초기화 함수

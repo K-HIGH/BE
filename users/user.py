@@ -4,12 +4,12 @@
 사용자 정보, 프로필, 알림 설정을 관리하는 모델
 """
 
-import uuid
+from ulid import ulid
 from typing import Optional, Dict, Any
 from sqlalchemy import Column
-from sqlalchemy.dialects.postgresql import UUID, ENUM
+from sqlalchemy.dialects.postgresql import ENUM
 
-from sqlmodel import Field, Relationship
+from sqlmodel import Field, Relationship, String
 
 from common.postgres.models.base import TimestampMixin, OAuthPlatform
 
@@ -19,9 +19,9 @@ class User(TimestampMixin, table=True):
     __tablename__ = "users"
     
     user_id: Optional[int] = Field(default=None, primary_key=True, description="유저 구분 ID, jwt 토큰 부여 시 사용")
-    user_uuid: uuid.UUID = Field(
-        default_factory=uuid.uuid4, 
-        sa_column=Column(UUID(as_uuid=True), unique=True, index=True),
+    user_ulid: str = Field(
+        default_factory=lambda: str(ulid()), 
+        sa_column=Column(String(26), unique=True, index=True),
         description="유저 UUID, 유저 구분 시 사용"
     )
     
@@ -39,8 +39,14 @@ class User(TimestampMixin, table=True):
     alert: Optional["UserAlert"] = Relationship(back_populates="user", sa_relationship_kwargs={"uselist": False})
     favorites: list["LocationFavorite"] = Relationship(back_populates="user")
     route_histories: list["RouteHistory"] = Relationship(back_populates="user")
-    caregivers: list["Caregiver"] = Relationship(back_populates="user")
-    target_caregivers: list["Caregiver"] = Relationship(back_populates="target_user")
+    caregivers: list["Caregiver"] = Relationship(
+        back_populates="user",
+        sa_relationship_kwargs={"foreign_keys": "[Caregiver.user_id]"}
+    )
+    target_caregivers: list["Caregiver"] = Relationship(
+        back_populates="target_user",
+        sa_relationship_kwargs={"foreign_keys": "[Caregiver.target_id]"}
+    )
     safety_areas: list["SafetyArea"] = Relationship(back_populates="user")
 
 
