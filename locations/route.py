@@ -9,10 +9,12 @@ from typing import Optional, Dict, Any
 from sqlalchemy import Column, DateTime
 from sqlalchemy.dialects.postgresql import JSONB
 
-from sqlmodel import SQLModel, Field, Relationship
+from sqlmodel import Field, Relationship
+
+from common.postgres.models import TimestampMixin
 
 
-class RouteHistory(SQLModel, table=True):
+class RouteHistory(TimestampMixin, table=True):
     """사용자 경로 탐색 기록"""
     __tablename__ = "route_history"
     

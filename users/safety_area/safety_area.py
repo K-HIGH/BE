@@ -5,14 +5,15 @@
 """
 
 from typing import Optional
-from datetime import datetime
 from sqlalchemy import Column
 from geoalchemy2 import Geometry
 
-from sqlmodel import SQLModel, Field, Relationship
+from sqlmodel import Field, Relationship
+
+from common.postgres.models import TimestampMixin
 
 
-class SafetyArea(SQLModel, table=True):
+class SafetyArea(TimestampMixin, table=True):
     """안전 구역 정보"""
     __tablename__ = "safety_area"
     
@@ -24,7 +25,6 @@ class SafetyArea(SQLModel, table=True):
         description="안전 구역 중심 좌표"
     )
     dist_safety_area: float = Field(description="안전 구역 반지름")
-    updated_at: Optional[datetime] = Field(default=None, description="수정 시각")
     
     # 관계
     user: "User" = Relationship(back_populates="safety_areas") 

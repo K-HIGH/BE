@@ -4,12 +4,12 @@
 보호자 정보와 위치 캐시를 관리하는 모델
 """
 
-from sqlmodel import SQLModel, Field, Relationship
+from sqlmodel import Field, Relationship
 
 from common.postgres.models import TimestampMixin
 
 
-class Caregiver(SQLModel, table=True):
+class Caregiver(TimestampMixin, table=True):
     """보호자 정보"""
     __tablename__ = "caregivers"
     

@@ -14,7 +14,7 @@ from sqlmodel import SQLModel, Field, Relationship
 from common.postgres.models import TimestampMixin
 
 
-class LocationFavorite(SQLModel, TimestampMixin, table=True):
+class LocationFavorite(TimestampMixin, table=True):
     """즐겨찾기 위치 정보"""
     __tablename__ = "loc_favorite"
     

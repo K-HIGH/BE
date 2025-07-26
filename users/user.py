@@ -6,15 +6,15 @@
 
 import uuid
 from typing import Optional, Dict, Any
-from sqlalchemy import Column, String, Integer, Boolean, DateTime, Text
+from sqlalchemy import Column
 from sqlalchemy.dialects.postgresql import UUID, ENUM
 
-from sqlmodel import SQLModel, Field, Relationship
+from sqlmodel import Field, Relationship
 
 from common.postgres.models.base import TimestampMixin, OAuthPlatform
 
 
-class User(SQLModel, TimestampMixin, table=True):
+class User(TimestampMixin, table=True):
     """사용자 기본 정보"""
     __tablename__ = "users"
     
@@ -44,7 +44,7 @@ class User(SQLModel, TimestampMixin, table=True):
     safety_areas: list["SafetyArea"] = Relationship(back_populates="user")
 
 
-class UserProfile(SQLModel, TimestampMixin, table=True):
+class UserProfile(TimestampMixin, table=True):
     """사용자 프로필 정보"""
     __tablename__ = "users_profile"
     
@@ -58,7 +58,7 @@ class UserProfile(SQLModel, TimestampMixin, table=True):
     user: User = Relationship(back_populates="profile")
 
 
-class UserAlert(SQLModel, table=True):
+class UserAlert(TimestampMixin, table=True):
     """사용자 알림 설정"""
     __tablename__ = "users_alert"
     
