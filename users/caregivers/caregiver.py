@@ -5,7 +5,7 @@
 """
 
 from typing import Optional
-from sqlmodel import Field, Relationship
+from sqlmodel import Column, Field, Integer, Relationship
 
 from common.postgres.models import TimestampMixin
 
@@ -14,7 +14,8 @@ class Caregiver(TimestampMixin, table=True):
     """보호자 정보"""
     __tablename__ = "caregivers"
     
-    user_id: int = Field(primary_key=True, foreign_key="users.user_id", description="보호자 ID")
+    caregiver_id: int = Field(primary_key=True, default=None, description="보호자 ID")
+    user_id: int = Field(foreign_key="users.user_id", description="보호자 ID")
     target_id: int = Field(foreign_key="users.user_id", description="보호 대상 ID")
 
     # 관계
