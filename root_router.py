@@ -9,6 +9,11 @@ from locations import router as locations_router
 
 root_router = APIRouter(prefix="/api/v1")
 
+root_router.include_router(users_router)
+root_router.include_router(auth_router)
+
+root_router.include_router(locations_router)
+
 
 # 예시 POST 엔드포인트
 @root_router.post("/message", response_model=MessageResponse, tags=["Root"])
