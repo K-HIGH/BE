@@ -13,6 +13,31 @@ class CRUDCaregiver(CRUDBase[Caregiver, None, None]):
         """사용자 ID로 보호자 목록 조회"""
         statement = select(Caregiver).where(Caregiver.user_id == user_id)
         return db.exec(statement).all()
-
+    
+    def get_by_target_id(self, db: Session, target_id: int) -> List[Caregiver]:
+        """대상 ID로 보호자 목록 조회"""
+        statement = select(Caregiver).where(Caregiver.target_id == target_id)
+        return db.exec(statement).all()
+    
+    def create_caregiver_relationship(self, db: Session, user_id: int, target_id: int) -> Caregiver:
+        """보호자 관계 생성"""
+        caregiver = Caregiver(user_id=user_id, target_id=target_id)
+        db.add(caregiver)
+        db.commit()
+        db.refresh(caregiver)
+        return caregiver
+    
+    def delete_caregiver_relationship(self, db: Session, user_id: int, target_id: int) -> bool:
+        """보호자 관계 삭제"""
+        statement = select(Caregiver).where(
+            Caregiver.user_id == user_id,
+            Caregiver.target_id == target_id
+        )
+        caregiver = db.exec(statement).first()
+        if caregiver:
+            db.delete(caregiver)
+            db.commit()
+            return True
+        return False
 
 caregiver_crud = CRUDCaregiver(Caregiver)
