@@ -18,8 +18,8 @@ class RouteHistory(TimestampMixin, table=True):
     """사용자 경로 탐색 기록"""
     __tablename__ = "route_history"
     
-    user_id: int = Field(primary_key=True, foreign_key="users.user_id", description="유저 구분 ID")
-    created_at: datetime = Field(primary_key=True, default_factory=datetime.now, description="탐색 시간")
+    route_id: int = Field(primary_key=True, description="경로 탐색 기록 ID")
+    user_id: int = Field(foreign_key="users.user_id", description="유저 구분 ID")
     
     # 경로 정보
     src: Dict[str, Any] = Field(
