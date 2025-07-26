@@ -23,20 +23,3 @@ class OAuthPlatform(str, Enum):
     GOOGLE = "google"
     APPLE = "apple"
     NAVER = "naver"
-
-
-class Point(BaseModel):
-    """PostgreSQL POINT 타입을 위한 모델"""
-    x: float  # 경도 (longitude)
-    y: float  # 위도 (latitude)
-    
-    def __str__(self) -> str:
-        return f"({self.x},{self.y})"
-    
-    @classmethod
-    def from_string(cls, point_str: str) -> "Point":
-        """문자열에서 Point 객체 생성"""
-        # PostgreSQL POINT 형식: "(x,y)" 또는 "x,y"
-        point_str = point_str.strip("()")
-        x, y = map(float, point_str.split(","))
-        return cls(x=x, y=y) 

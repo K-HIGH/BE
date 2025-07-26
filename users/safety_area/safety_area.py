@@ -7,22 +7,20 @@
 from typing import Optional
 from datetime import datetime
 from sqlalchemy import Column
-from sqlalchemy.dialects.postgresql import POINT
+from geoalchemy2 import Geometry
 
 from sqlmodel import SQLModel, Field, Relationship
 
-from common.postgres.models import TimestampMixin, Point
 
-
-class SafetyArea(SQLModel, TimestampMixin, table=True):
+class SafetyArea(SQLModel, table=True):
     """안전 구역 정보"""
     __tablename__ = "safety_area"
     
     safety_area_id: Optional[int] = Field(default=None, primary_key=True, description="안전 구역 ID")
     user_id: int = Field(foreign_key="users.user_id", description="유저 구분 ID")
     safety_area_name: str = Field(max_length=32, description="안전 구역명")
-    loc_safety_area: Point = Field(
-        sa_column=Column(POINT),
+    loc_safety_area: str = Field(
+        sa_column=Column(Geometry(geometry_type="POINT", srid=4326)),
         description="안전 구역 중심 좌표"
     )
     dist_safety_area: float = Field(description="안전 구역 반지름")
