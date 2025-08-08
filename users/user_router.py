@@ -196,7 +196,8 @@ async def update_user_alert(
 )
 async def delete_user(user: User = Depends(get_current_user), db: Session = Depends(get_session)):
     user_crud.delete_user(db, user.user_id)
-    memcache_client.delete(str(user.user_id))
+    memcache_client.delete("authorized_user:" + str(user.user_id))
+    memcache_client.delete("track:" + str(user.user_id))
     return JSONResponse(
         status_code=200, 
         content={"message": "User deleted"}
