@@ -21,9 +21,9 @@ class CRUDUser(CRUDBase[User, None, None]):
         statement = select(User).where(User.user_id == user_id)
         return db.exec(statement).first()
 
-    def get_by_uuid(self, db: Session, user_uuid: str) -> Optional[User]:
+    def get_by_ulid(self, db: Session, user_ulid: str) -> Optional[User]:
         """UUID로 사용자 조회"""
-        statement = select(User).where(User.user_uuid == user_uuid)
+        statement = select(User).where(User.user_ulid == user_ulid)
         return db.exec(statement).first()
     
     def get_by_oauth(self, db: Session, platform: OAuthPlatform, openid: str) -> Optional[User]:
