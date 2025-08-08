@@ -15,7 +15,7 @@ class CRUDCaregiver(CRUDBase[Caregiver, None, None]):
         return db.exec(statement).first()
     
     def get_by_user_id(self, db: Session, user_id: int) -> List[Caregiver]:
-        """사용자 ID로 보호자 목록 조회"""
+        """사용자 ID로 보호대상 목록 조회"""
         statement = select(Caregiver).where(Caregiver.user_id == user_id)
         return db.exec(statement).all()
     
