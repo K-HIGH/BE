@@ -11,6 +11,8 @@ from users.user_crud import user_crud
 from .track_dto import TrackGetRes, TrackUpdateReq
 
 
+TRACKING_EXPIRE_TIME = 5
+
 router = APIRouter(tags=["Track API"])
 
 
@@ -112,7 +114,7 @@ async def update_track(
     req: TrackUpdateReq,
     user: User = Depends(get_current_user)
 ):
-    memcache_client.set(str(user.user_id), req.model_dump(), expire=5)
+    memcache_client.set(str(user.user_id), req.model_dump(), expire=TRACKING_EXPIRE_TIME)
     return JSONResponse(
         status_code=200, 
         content={
