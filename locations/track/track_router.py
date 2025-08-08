@@ -51,7 +51,7 @@ router = APIRouter(tags=["Track API"])
             "description": "Not Found",
             "content": {
                 "application/json": {
-                    "example": {"detail": "Not Found"}
+                    "example": {"detail": "User Not Found"}
                 }
             }
         }
@@ -83,7 +83,7 @@ async def get_track(
         return JSONResponse(
             status_code=404, 
             content={
-                "detail": "TrackNot Found"
+                "detail": "Track Not Found"
             })
     return TrackGetRes(**track)
 
