@@ -43,7 +43,7 @@ def create_server_jwt(user_id: str, email: str):
 async def get_current_user(token: str = Depends(oauth2_scheme)):
     try:
         payload = jwt.decode(token, SERVER_JWT_SECRET, algorithms=["HS256"])
-        if user := memcache_client.get(str(payload["sub"])):
+        if user := memcache_client.get("authorized_user:" + str(payload["sub"])):
             return user
         else:
             raise HTTPException(status_code=401, detail="Invalid token")
@@ -103,7 +103,7 @@ async def login(login_req: LoginReqDto, db: Session = Depends(get_session)):
         flag = True
 
     server_jwt = create_server_jwt(user.user_id, email)
-    memcache_client.set(str(user.user_id), user, expire=60*60)
+    memcache_client.set("authorized_user:" + str(user.user_id), user, expire=60*60)
     if flag:
         # 회원가입 처리
         return JSONResponse(status_code=201, content={"access_token": server_jwt})
@@ -112,5 +112,5 @@ async def login(login_req: LoginReqDto, db: Session = Depends(get_session)):
 
 @router.delete("/logout")
 async def logout(user: User = Depends(get_current_user)):
-    memcache_client.delete(str(user.user_id))
+    memcache_client.delete("authorized_user:" + str(user.user_id))
     return {"message": "Logout"}
