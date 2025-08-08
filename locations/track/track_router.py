@@ -80,7 +80,7 @@ async def get_track(
                 "detail": "Forbidden"
             })
 
-    track = memcache_client.get(str(target_user.user_id))
+    track = memcache_client.get("track:" + str(target_user.user_id))
     if not track:
         return JSONResponse(
             status_code=404, 
@@ -114,7 +114,11 @@ async def update_track(
     req: TrackUpdateReq,
     user: User = Depends(get_current_user)
 ):
-    memcache_client.set(str(user.user_id), req.model_dump(), expire=TRACKING_EXPIRE_TIME)
+    memcache_client.set(
+        "track:" + str(user.user_id), 
+        req.model_dump(), 
+        expire=TRACKING_EXPIRE_TIME
+    )
     return JSONResponse(
         status_code=200, 
         content={
