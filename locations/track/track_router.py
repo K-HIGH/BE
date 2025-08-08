@@ -73,7 +73,7 @@ async def get_track(
     
     caregivers = caregiver_crud.get_by_user_id(db, user.user_id)
     
-    if not caregivers or target_user.user_id not in [caregiver.target_id for caregiver in caregivers]:
+    if not caregivers or target_user.user_id not in {caregiver.target_id for caregiver in caregivers}:
         return JSONResponse(
             status_code=403, 
             content={
