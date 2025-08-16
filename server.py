@@ -105,16 +105,16 @@ async def health_check() -> JSONResponse:
 if __name__ == "__main__":
     print("🚀 K-HIGH Backend API 서버를 시작합니다...")
     print("📖 API 문서:")
-    print("   - Swagger UI: http://localhost:8001/docs")
-    print("   - ReDoc: http://localhost:8001/redoc")
-    print("   - OpenAPI JSON: http://localhost:8001/openapi.json")
-    print("🌐 서버 주소: http://localhost:8001")
+    print("   - Swagger UI: http://localhost:63001/docs")
+    print("   - ReDoc: http://localhost:63001/redoc")
+    print("   - OpenAPI JSON: http://localhost:63001/openapi.json")
+    print("🌐 서버 주소: http://localhost:63001")
     print("=" * 50)
     
     uvicorn.run(
         "server:app",
         host="0.0.0.0",
-        port=int(os.getenv("PORT", "8001")),
+        port=int(os.getenv("PORT", "63001")),
         reload=bool(os.getenv("DEBUG", "False")),  # 개발 모드에서 코드 변경시 자동 재시작
         log_level=os.getenv("LOG_LEVEL", "info")
     ) 
