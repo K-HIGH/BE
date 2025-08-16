@@ -107,7 +107,7 @@ async def login(
 
     flag = False
     if not (user := user_crud.get_by_oauth(db, platform, openid)):
-        user = user_crud.create_user(db, User(platform=platform, openid=openid))
+        user = user_crud.create_user(db, User(oauth_platform=platform, openid=openid))
         flag = True
 
     memcache_client.set(supabase_token, user, expire=60*60)
