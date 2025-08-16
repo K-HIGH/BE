@@ -40,9 +40,22 @@ def create_server_jwt(user_id: str, email: str):
     token = jwt.encode(payload, SERVER_JWT_SECRET, algorithm=SERVER_JWT_ALGORITHM)
     return token
 
-async def get_current_user(token: str = Depends(oauth2_scheme)):
-    if not (user := memcache_client.get(token)):
+async def get_current_user(
+    token: str = Depends(oauth2_scheme), 
+    db: Session = Depends(get_session)
+):
+    if user := memcache_client.get(token):
+        return user
+    
+    payload = await verify_supabase_jwt(token)
+    openid = payload["sub"]
+    platform = payload["app_metadata"]["provider"]
+    email = payload.get("email")
+
+    if not (user := user_crud.get_by_oauth(db, platform, openid)):
         raise HTTPException(status_code=401, detail="Invalid token")
+
+    memcache_client.set(token, user, expire=60*60)
     return user
 
 # Supabase JWT 검증
@@ -78,10 +91,11 @@ async def verify_supabase_jwt(token: str):
         # JWT 해독 실패 시 예외 처리
         raise HTTPException(status_code=401, detail=f"Invalid token")
 
-    # raise HTTPException(status_code=401, detail="Invalid Supabase token")
-
 @router.post("/login")
-async def login(login_req: LoginReqDto, db: Session = Depends(get_session)):
+async def login(
+    login_req: LoginReqDto, 
+    db: Session = Depends(get_session)
+):
     supabase_token = login_req.access_token
     if not supabase_token:
         raise HTTPException(status_code=400, detail="Missing access_token")
@@ -91,7 +105,6 @@ async def login(login_req: LoginReqDto, db: Session = Depends(get_session)):
     platform = payload["app_metadata"]["provider"]
     email = payload.get("email")
 
-    # 서버 JWT 발급
     flag = False
     if not (user := user_crud.get_by_oauth(db, platform, openid)):
         user = user_crud.create_user(db, User(platform=platform, openid=openid))
@@ -103,6 +116,12 @@ async def login(login_req: LoginReqDto, db: Session = Depends(get_session)):
         return JSONResponse(status_code=201, content={"message": "회원가입 완료"})
     else:
         return JSONResponse(status_code=200, content={"message": "로그인 완료"})
+
+@router.post("/token")
+async def token(
+    user: User = Depends(get_current_user),
+):
+    return JSONResponse(status_code=200, content={"message": "세션 동기화 완료"})
 
 @router.delete("/logout")
 async def logout(user: User = Depends(get_current_user)):
