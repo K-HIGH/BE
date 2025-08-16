@@ -41,14 +41,9 @@ def create_server_jwt(user_id: str, email: str):
     return token
 
 async def get_current_user(token: str = Depends(oauth2_scheme)):
-    try:
-        payload = jwt.decode(token, SERVER_JWT_SECRET, algorithms=["HS256"])
-        if user := memcache_client.get("authorized_user:" + str(payload["sub"])):
-            return user
-        else:
-            raise HTTPException(status_code=401, detail="Invalid token")
-    except JWTError:
+    if not (user := memcache_client.get(token)):
         raise HTTPException(status_code=401, detail="Invalid token")
+    return user
 
 # Supabase JWT 검증
 async def verify_supabase_jwt(token: str):
@@ -102,13 +97,12 @@ async def login(login_req: LoginReqDto, db: Session = Depends(get_session)):
         user = user_crud.create_user(db, User(platform=platform, openid=openid))
         flag = True
 
-    server_jwt = create_server_jwt(user.user_id, email)
-    memcache_client.set("authorized_user:" + str(user.user_id), user, expire=60*60)
+    memcache_client.set(supabase_token, user, expire=60*60)
     if flag:
         # 회원가입 처리
-        return JSONResponse(status_code=201, content={"access_token": server_jwt})
+        return JSONResponse(status_code=201, content={"message": "회원가입 완료"})
     else:
-        return JSONResponse(status_code=200, content={"access_token": server_jwt})
+        return JSONResponse(status_code=200, content={"message": "로그인 완료"})
 
 @router.delete("/logout")
 async def logout(user: User = Depends(get_current_user)):
