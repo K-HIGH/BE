@@ -44,18 +44,20 @@ async def get_current_user(
     token: str = Depends(oauth2_scheme), 
     db: Session = Depends(get_session)
 ):
-    if user := memcache_client.get(token):
-        return user
     
     payload = await verify_supabase_jwt(token)
     openid = payload["sub"]
     platform = payload["app_metadata"]["provider"]
     email = payload.get("email")
 
+    key = f"oauth:{platform}:{openid}"
+    if user := memcache_client.get(key):
+        return user
+
     if not (user := user_crud.get_by_oauth(db, platform, openid)):
         raise HTTPException(status_code=401, detail="Invalid token")
 
-    memcache_client.set(token, user, expire=60*60)
+    memcache_client.set(key, user, expire=60*60)
     return user
 
 # Supabase JWT 검증
@@ -110,7 +112,8 @@ async def login(
         user = user_crud.create_user(db, User(oauth_platform=platform, openid=openid))
         flag = True
 
-    memcache_client.set(supabase_token, user, expire=60*60)
+    key = f"oauth:{platform}:{openid}"
+    memcache_client.set(key, user, expire=60*60)
     if flag:
         # 회원가입 처리
         return JSONResponse(status_code=201, content={"message": "회원가입 완료"})
@@ -125,5 +128,6 @@ async def token(
 
 @router.delete("/logout")
 async def logout(user: User = Depends(get_current_user)):
-    memcache_client.delete("authorized_user:" + str(user.user_id))
+    key = f"oauth:{user.platform}:{user.openid}"
+    memcache_client.delete(key)
     return {"message": "Logout"}
