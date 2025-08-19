@@ -83,7 +83,13 @@ class CRUDUserProfile(CRUDBase[UserProfile, None, None]):
     
     def create_user_profile(self, db: Session, user_profile: UserProfile) -> Optional[UserProfile]:
         """사용자 프로필 생성"""
-        user_profile = UserProfile(user_id=user_profile.user_id, user_name=user_profile.user_name, phone=user_profile.phone, is_caregiver=user_profile.is_caregiver)
+        user_profile = UserProfile(
+            user_id=user_profile.user_id, 
+            user_name=user_profile.user_name, 
+            phone=user_profile.phone, 
+            is_caregiver=user_profile.is_caregiver,
+            is_helper=user_profile.is_helper
+        )
         db.add(user_profile)
         db.commit()
         db.refresh(user_profile)
