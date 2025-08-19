@@ -58,6 +58,7 @@ class UserProfile(TimestampMixin, table=True):
     user_name: str = Field(max_length=16, description="유저명")
     phone: Optional[str] = Field(max_length=11, nullable=True, description="연락처")
     is_caregiver: bool = Field(default=False, description="보호자 여부")
+    is_helper: bool = Field(default=False, description="도우미 여부")
     # 관계
     user: User = Relationship(back_populates="profile")
 
