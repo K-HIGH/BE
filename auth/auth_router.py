@@ -52,7 +52,6 @@ async def get_current_user(
 
     key = f"oauth:{platform}:{openid}"
     if user := memcache_client.get(key):
-        user = User(**user)
         return user
 
     if not (user := user_crud.get_by_oauth(db, platform, openid)):
@@ -129,6 +128,6 @@ async def token(
 
 @router.delete("/logout")
 async def logout(user: User = Depends(get_current_user)):
-    key = f"oauth:{user.platform}:{user.openid}"
+    key = f"oauth:{user.oauth_platform}:{user.openid}"
     memcache_client.delete(key)
     return Response(status_code=204)
