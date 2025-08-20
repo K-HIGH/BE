@@ -2,7 +2,7 @@ import os
 from datetime import datetime, timedelta, timezone
 
 # import httpx
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from fastapi.exceptions import HTTPException
 # from fastapi.requests import Request
 from fastapi.security.oauth2 import OAuth2PasswordBearer
@@ -52,6 +52,7 @@ async def get_current_user(
 
     key = f"oauth:{platform}:{openid}"
     if user := memcache_client.get(key):
+        user = User(**user)
         return user
 
     if not (user := user_crud.get_by_oauth(db, platform, openid)):
@@ -130,4 +131,4 @@ async def token(
 async def logout(user: User = Depends(get_current_user)):
     key = f"oauth:{user.platform}:{user.openid}"
     memcache_client.delete(key)
-    return {"message": "Logout"}
+    return Response(status_code=204)
