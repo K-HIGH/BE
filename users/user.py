@@ -5,7 +5,7 @@
 """
 
 from ulid import ulid
-from typing import Optional, Dict, Any
+from typing import Optional
 from sqlalchemy import Column
 from sqlalchemy.dialects.postgresql import ENUM
 
@@ -35,10 +35,10 @@ class User(TimestampMixin, table=True):
     oauth_token: Optional[str] = Field(default=None, max_length=256, description="OAuth 토큰")
     
     # 관계
-    profile: Optional["UserProfile"] = Relationship(back_populates="user", sa_relationship_kwargs={"uselist": False})
-    alert: Optional["UserAlert"] = Relationship(back_populates="user", sa_relationship_kwargs={"uselist": False})
-    favorites: list["LocationFavorite"] = Relationship(back_populates="user")
-    route_histories: list["RouteHistory"] = Relationship(back_populates="user")
+    profile: Optional["UserProfile"] = Relationship(back_populates="user", sa_relationship_kwargs={"uselist": False}, cascade_delete=True)
+    alert: Optional["UserAlert"] = Relationship(back_populates="user", sa_relationship_kwargs={"uselist": False}, cascade_delete=True)
+    favorites: list["LocationFavorite"] = Relationship(back_populates="user", cascade_delete=True)
+    route_histories: list["RouteHistory"] = Relationship(back_populates="user", cascade_delete=True)
     caregivers: list["Caregiver"] = Relationship(
         back_populates="user",
         sa_relationship_kwargs={"foreign_keys": "[Caregiver.user_id]"}
@@ -47,7 +47,7 @@ class User(TimestampMixin, table=True):
         back_populates="target_user",
         sa_relationship_kwargs={"foreign_keys": "[Caregiver.target_id]"}
     )
-    safety_areas: list["SafetyArea"] = Relationship(back_populates="user")
+    safety_areas: list["SafetyArea"] = Relationship(back_populates="user", cascade_delete=True)
 
 
 class UserProfile(TimestampMixin, table=True):
@@ -59,6 +59,7 @@ class UserProfile(TimestampMixin, table=True):
     phone: Optional[str] = Field(max_length=11, nullable=True, description="연락처")
     is_caregiver: bool = Field(default=False, description="보호자 여부")
     is_helper: bool = Field(default=False, description="도우미 여부")
+
     # 관계
     user: User = Relationship(back_populates="profile")
 
@@ -72,4 +73,4 @@ class UserAlert(TimestampMixin, table=True):
     is_alert: bool = Field(default=False, description="알림 유무, default: False")
     
     # 관계
-    user: User = Relationship(back_populates="alert") 
+    user: User = Relationship(back_populates="alert")

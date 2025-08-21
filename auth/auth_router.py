@@ -13,8 +13,8 @@ from sqlmodel import Session
 
 from common.memcache.database import memcache_client
 from common.postgres.database import get_session
-from users.user import User
-from users.user_crud import user_crud
+from users.user import User, UserAlert, UserProfile
+from users.user_crud import user_crud, user_profile_crud, user_alert_crud
 
 from .dto import LoginReqDto
 
@@ -105,11 +105,14 @@ async def login(
     payload = await verify_supabase_jwt(supabase_token)
     openid = payload["sub"]
     platform = payload["app_metadata"]["provider"]
+    user_name = payload["user_metadata"]["name"]
     email = payload.get("email")
 
     flag = False
     if not (user := user_crud.get_by_oauth(db, platform, openid)):
         user = user_crud.create_user(db, User(oauth_platform=platform, openid=openid))
+        user_profile = user_profile_crud.create_user_profile(db, UserProfile(user_id=user.user_id, user_name=user_name))
+        user_alert = user_alert_crud.create_user_alert(db, UserAlert(user_id=user.user_id, is_alert=False))
         flag = True
 
     key = f"oauth:{platform}:{openid}"
