@@ -53,12 +53,14 @@ async def get_current_user(
 
     key = f"oauth:{platform}:{openid}"
     if user := memcache_client.get(key):
+        user = db.merge(user)
         return user
 
     if not (user := user_crud.get_by_oauth(db, platform, openid)):
         raise HTTPException(status_code=401, detail="Invalid token")
 
     memcache_client.set(key, user, expire=60*60)
+    
     return user
 
 # Supabase JWT 검증
@@ -90,8 +92,9 @@ async def verify_supabase_jwt(token: str):
             audience="authenticated"
         )
         return payload  # 검증 성공 시 payload 반환
-    except JWTError:
+    except JWTError as e:
         # JWT 해독 실패 시 예외 처리
+        print(f"JWTError: {e}")
         raise HTTPException(status_code=401, detail=f"Invalid token")
 
 @router.post("/login")
