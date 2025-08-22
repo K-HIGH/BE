@@ -12,7 +12,7 @@ from sqlmodel import Session
 
 from users.user_crud import user_crud, user_profile_crud
 from users.caregivers.caregiver_crud import caregiver_crud
-from users.caregivers.dto import CaregiverGetRes, CaregiverGetResWithTarget
+from users.caregivers.dto import CaregiverGetRes, CaregiverGetResWithTarget, CaregiverUpdateReq
 from users.user import User
 from common.postgres.database import get_session
 from auth import get_current_user
@@ -240,6 +240,69 @@ async def create_caregiver(
         )
     )
 
+@router.put(
+    "/{caregiver_id}",
+    response_model=CaregiverGetRes,
+    responses={
+        200: {
+            "description": "Caregiver updated",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "caregiver_id": 1,
+                        "user_id": 1,
+                        "target_id": 2,
+                        "relationship_type": "caregiver",
+                        "description": "description",
+                        "created_at": "2021-01-01T00:00:00",
+                        "updated_at": "2021-01-01T00:00:00"
+                    }
+                }
+            }
+        },
+        401: {
+            "description": "Unauthorized",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Unauthorized"}
+                }
+            }
+        },
+        404: {
+            "description": "Caregiver not found",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Caregiver not found"}
+                }
+            }
+        }
+    }
+)
+async def update_caregiver(
+    caregiver_id: int,
+    caregiver_update_req: CaregiverUpdateReq,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_session)
+):
+    """보호자 관계 업데이트"""
+    if not (caregiver := caregiver_crud.get_by_caregiver_id(db, caregiver_id)):
+        raise HTTPException(status_code=404, detail="Caregiver not found")
+    if caregiver.user_id != user.user_id:
+        raise HTTPException(status_code=404, detail="Caregiver not found")
+    
+    caregiver = caregiver_crud.update_caregiver_relationship(db, caregiver_id, caregiver_update_req)
+    return JSONResponse(
+        status_code=200,
+        content=CaregiverGetRes(
+            caregiver_id=caregiver.caregiver_id,
+            user_id=caregiver.user_id,
+            target_id=caregiver.target_id,
+            relationship_type=caregiver.relationship_type,
+            description=caregiver.description,
+            created_at=caregiver.created_at,
+            updated_at=caregiver.updated_at
+        )
+    )
 
 @router.delete(
     "/{caregiver_id}",

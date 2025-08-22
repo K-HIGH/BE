@@ -23,3 +23,7 @@ class CaregiverGetResWithTarget(BaseModel):
 class TakerApproveReq(BaseModel):
     caregiver_id: int
     is_approved: bool
+
+class CaregiverUpdateReq(BaseModel):
+    relationship_type: Optional[str] = None
+    description: Optional[str] = None

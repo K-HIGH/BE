@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from common.postgres.crud.base import CRUDBase
 from users.user import User
 from .caregiver import Caregiver
+from .dto import CaregiverUpdateReq
 
 
 class CRUDCaregiver(CRUDBase[Caregiver, None, None]):
@@ -32,6 +33,21 @@ class CRUDCaregiver(CRUDBase[Caregiver, None, None]):
         db.commit()
         db.refresh(caregiver)
         return caregiver
+
+    def update_caregiver_relationship(self, db: Session, caregiver_id: int, caregiver_update_req: CaregiverUpdateReq) -> Caregiver:
+        """보호자 관계 업데이트"""
+        statement = select(Caregiver).where(Caregiver.caregiver_id == caregiver_id)
+        caregiver = db.exec(statement).first()
+        if caregiver:
+            if caregiver_update_req.relationship_type:
+                caregiver.relationship_type = caregiver_update_req.relationship_type
+            if caregiver_update_req.description:
+                caregiver.description = caregiver_update_req.description
+            db.commit()
+            db.refresh(caregiver)
+            return caregiver
+        else:
+            raise ValueError(f"Caregiver with caregiver_id {caregiver_id} not found")
     
     def delete_caregiver_relationship(self, db: Session, caregiver_id: int) -> bool:
         """보호자 관계 삭제"""
