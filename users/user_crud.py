@@ -4,7 +4,7 @@
 사용자 정보, 프로필, 알림 설정에 대한 CRUD 작업
 """
 
-from typing import Optional
+from typing import List, Optional
 from sqlmodel import Session, select
 from sqlalchemy.orm import joinedload
 
@@ -20,6 +20,11 @@ class CRUDUser(CRUDBase[User, None, None]):
         """사용자 ID로 사용자 조회"""
         statement = select(User).where(User.user_id == user_id)
         return db.exec(statement).first()
+
+    def get_by_user_ids(self, db: Session, user_ids: List[int]) -> List[User]:
+        """사용자 ID 목록으로 사용자 조회"""
+        statement = select(User).where(User.user_id.in_(user_ids))
+        return db.exec(statement).all()
 
     def get_by_ulid(self, db: Session, user_ulid: str) -> Optional[User]:
         """UUID로 사용자 조회"""

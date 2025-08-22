@@ -36,7 +36,7 @@ class UserRes(BaseModel):
     user_alert: UserAlertRes
 
 class UserViewRes(BaseModel):
-    user_id: int
+    user_ulid: str
     user_name: str
     email: str
     phone: Optional[str] = None

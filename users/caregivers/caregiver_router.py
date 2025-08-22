@@ -12,7 +12,7 @@ from sqlmodel import Session
 
 from users.user_crud import user_crud, user_profile_crud
 from users.caregivers.caregiver_crud import caregiver_crud
-from users.caregivers.dto import CaregiverGetRes, CaregiverGetResWithTarget, CaregiverUpdateReq
+from users.caregivers.dto import CaregiverCreateReq, CaregiverGetRes, CaregiverGetResWithTarget, CaregiverUpdateReq
 from users.user import User
 from common.postgres.database import get_session
 from auth import get_current_user
@@ -32,8 +32,8 @@ router = APIRouter(tags=["Caregivers API"])
                     "example": [
                         {
                             "caregiver_id": 1,
-                            "user_id": 1,
-                            "target_id": 2,
+                            "user_ulid": "1234567890",
+                            "target_ulid": "1234567890",
                             "relationship_type": "caregiver",
                             "description": "description",
                             "created_at": "2021-01-01T00:00:00",
@@ -59,19 +59,31 @@ async def get_caregivers(
 ):
     """보호자 목록 조회"""
     caregivers = caregiver_crud.get_by_user_id(db, user.user_id)
+    
+    caregivers_with_target = []
+    for caregiver in caregivers:
+        target = user_crud.get_by_user_id(db, caregiver.target_id)
+        target_profile = user_profile_crud.get_by_user_id(db, caregiver.target_id)
+        caregivers_with_target.append(CaregiverGetResWithTarget(
+            caregiver_id=caregiver.caregiver_id,
+            user_ulid=user.user_ulid,
+            target_ulid=target.user_ulid,
+            relationship_type=caregiver.relationship_type,
+            description=caregiver.description,
+            created_at=caregiver.created_at,
+            updated_at=caregiver.updated_at,
+            target=UserViewRes(
+                user_ulid=target.user_ulid,
+                user_name=target_profile.user_name,
+                email=target.email,
+                phone=target_profile.phone,
+                address=target_profile.address,
+                emergency_contact=target_profile.emergency_contact
+            )
+        ))
     return JSONResponse(
         status_code=200, 
-        content=[
-            CaregiverGetRes(
-                caregiver_id=caregiver.caregiver_id,
-                user_id=caregiver.user_id,
-                target_id=caregiver.target_id,
-                relationship_type=caregiver.relationship_type,
-                description=caregiver.description,
-                created_at=caregiver.created_at,
-                updated_at=caregiver.updated_at
-            ) for caregiver in caregivers
-        ]
+        content=caregivers_with_target
     )
 
 @router.get(
@@ -84,12 +96,12 @@ async def get_caregivers(
                 "application/json": {
                     "example": {
                         "caregiver_id": 1,
-                        "user_id": 1,
-                        "target_id": 2,
+                        "user_ulid": "1234567890",
+                        "target_ulid": "1234567890",
                         "created_at": "2021-01-01T00:00:00",
                         "updated_at": "2021-01-01T00:00:00",
                         "target": {
-                            "user_id": 2,
+                            "user_ulid": "1234567890",
                             "user_name": "John Doe",
                             "phone": "010-1234-5678",
                             "is_caregiver": True,
@@ -138,7 +150,7 @@ async def get_caregiver(
         target_profile = user_profile_crud.get_by_user_id(db, caregiver.target_id)
 
         target = UserViewRes(
-            user_id=target.user_id,
+            user_ulid=target.user_ulid,
             user_name=target_profile.user_name,
             email=target.email,
             phone=target_profile.phone,
@@ -150,8 +162,8 @@ async def get_caregiver(
         status_code=200,
         content=CaregiverGetResWithTarget(
             caregiver_id=caregiver.caregiver_id,
-            user_id=caregiver.user_id,
-            target_id=caregiver.target_id,
+            user_ulid=user.user_ulid,
+            target_ulid=target.user_ulid,
             relationship_type=caregiver.relationship_type,
             description=caregiver.description,
             created_at=caregiver.created_at,
@@ -170,14 +182,14 @@ async def get_caregiver(
                 "application/json": {
                     "example": {
                         "caregiver_id": 1,
-                        "user_id": 1,
-                        "target_id": 2,
+                        "user_ulid": "1234567890",
+                        "target_ulid": "1234567890",
                         "relationship_type": "caregiver",
                         "description": "description",
                         "created_at": "2021-01-01T00:00:00",
                         "updated_at": "2021-01-01T00:00:00",
                         "target": {
-                            "user_id": 2,
+                            "user_ulid": "1234567890",
                             "user_name": "John Doe",
                             "email": "test@test.com",
                             "phone": "010-1234-5678",
@@ -215,28 +227,36 @@ async def get_caregiver(
     }
 )
 async def create_caregiver(
-    target_email: str,
+    caregiver_create_req: CaregiverCreateReq,
     user: User = Depends(get_current_user),
     db: Session = Depends(get_session)
 ):
     """보호자 관계 생성"""
-    target = user_crud.get_by_email(db, target_email)
+    target = user_crud.get_by_email(db, caregiver_create_req.target_email)
     if not target:
         raise HTTPException(status_code=404, detail="Target not found")
     if target.user_id == user.user_id:
         raise HTTPException(status_code=409, detail="Caregiver already exists")
-    
+    target_profile = user_profile_crud.get_by_user_id(db, target.user_id)
     caregiver = caregiver_crud.create_caregiver_relationship(db, user.user_id, target.user_id)
     return JSONResponse(
-        status_code=200,
-        content=CaregiverGetRes(
+        status_code=201,
+        content=CaregiverGetResWithTarget(
             caregiver_id=caregiver.caregiver_id,
-            user_id=caregiver.user_id,
-            target_id=caregiver.target_id,
+            user_ulid=user.user_ulid,
+            target_ulid=target.user_ulid,
             relationship_type=caregiver.relationship_type,
             description=caregiver.description,
             created_at=caregiver.created_at,
-            updated_at=caregiver.updated_at
+            updated_at=caregiver.updated_at,
+            target=UserViewRes(
+                user_ulid=target.user_ulid,
+                user_name=target_profile.user_name,
+                email=target.email,
+                phone=target_profile.phone,
+                address=target_profile.address,
+                emergency_contact=target_profile.emergency_contact
+            )
         )
     )
 
@@ -289,18 +309,27 @@ async def update_caregiver(
         raise HTTPException(status_code=404, detail="Caregiver not found")
     if caregiver.user_id != user.user_id:
         raise HTTPException(status_code=404, detail="Caregiver not found")
-    
+    target = user_crud.get_by_user_id(db, caregiver.target_id)
     caregiver = caregiver_crud.update_caregiver_relationship(db, caregiver_id, caregiver_update_req)
+    target_profile = user_profile_crud.get_by_user_id(db, caregiver.target_id)
     return JSONResponse(
         status_code=200,
-        content=CaregiverGetRes(
+        content=CaregiverGetResWithTarget(
             caregiver_id=caregiver.caregiver_id,
-            user_id=caregiver.user_id,
-            target_id=caregiver.target_id,
+            user_ulid=user.user_ulid,
+            target_ulid=target.user_ulid,
             relationship_type=caregiver.relationship_type,
             description=caregiver.description,
             created_at=caregiver.created_at,
-            updated_at=caregiver.updated_at
+            updated_at=caregiver.updated_at,
+            target=UserViewRes(
+                user_ulid=target.user_ulid,
+                user_name=target_profile.user_name,
+                email=target.email,
+                phone=target_profile.phone,
+                address=target_profile.address,
+                emergency_contact=target_profile.emergency_contact
+            )
         )
     )
 
