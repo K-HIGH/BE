@@ -15,6 +15,7 @@ from common.memcache.database import memcache_client
 from common.postgres.database import get_session
 from users.user import User, UserAlert, UserProfile
 from users.user_crud import user_crud, user_profile_crud, user_alert_crud
+from users.user_dto import UserAlertRes, UserRes, UserProfileRes
 
 from .dto import LoginReqDto
 
@@ -110,24 +111,73 @@ async def login(
 
     flag = False
     if not (user := user_crud.get_by_oauth(db, platform, openid)):
-        user = user_crud.create_user(db, User(oauth_platform=platform, openid=openid))
+        user = user_crud.create_user(db, User(oauth_platform=platform, openid=openid, email=email))
         user_profile = user_profile_crud.create_user_profile(db, UserProfile(user_id=user.user_id, user_name=user_name))
         user_alert = user_alert_crud.create_user_alert(db, UserAlert(user_id=user.user_id, is_alert=False))
         flag = True
+    else:
+        user_profile = user_profile_crud.get_by_user_id(db, user.user_id)
+        user_alert = user_alert_crud.get_by_user_id(db, user.user_id)
 
     key = f"oauth:{platform}:{openid}"
     memcache_client.set(key, user, expire=60*60)
     if flag:
         # 회원가입 처리
-        return JSONResponse(status_code=201, content={"message": "회원가입 완료"})
+        return JSONResponse(
+            status_code=201, 
+            content=UserRes(
+                user=user,
+                user_profile=UserProfileRes(
+                    user_name=user_name,
+                    phone=user_profile.phone,
+                    is_caregiver=user_profile.is_caregiver,
+                    is_helper=user_profile.is_helper
+                ),
+                user_alert=UserAlertRes(
+                    fcm_token=user_alert.fcm_token,
+                    is_alert=user_alert.is_alert
+                )
+            ).model_dump(mode="json"))
+
     else:
-        return JSONResponse(status_code=200, content={"message": "로그인 완료"})
+        return JSONResponse(
+            status_code=200, 
+            content=UserRes(
+                user=user,
+                user_profile=UserProfileRes(
+                    user_name=user_name,
+                    phone=user_profile.phone,
+                    is_caregiver=user_profile.is_caregiver,
+                    is_helper=user_profile.is_helper
+                ),
+                user_alert=UserAlertRes(
+                    fcm_token=user_alert.fcm_token,
+                    is_alert=user_alert.is_alert
+                )
+            ).model_dump(mode="json"))
 
 @router.post("/token")
 async def token(
     user: User = Depends(get_current_user),
+    db: Session = Depends(get_session)
 ):
-    return JSONResponse(status_code=200, content={"message": "세션 동기화 완료"})
+    user_profile = user_profile_crud.get_by_user_id(db, user.user_id)
+    user_alert = user_alert_crud.get_by_user_id(db, user.user_id)
+    return JSONResponse(
+        status_code=200, 
+        content=UserRes(
+            user=user,
+            user_profile=UserProfileRes(
+                user_name=user_profile.user_name,
+                phone=user_profile.phone,
+                is_caregiver=user_profile.is_caregiver,
+                is_helper=user_profile.is_helper
+            ),
+            user_alert=UserAlertRes(
+                fcm_token=user_alert.fcm_token,
+                is_alert=user_alert.is_alert
+            )
+        ).model_dump(mode="json"))
 
 @router.delete("/logout")
 async def logout(user: User = Depends(get_current_user)):

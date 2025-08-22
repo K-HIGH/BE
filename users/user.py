@@ -33,7 +33,9 @@ class User(TimestampMixin, table=True):
     )
     openid: Optional[str] = Field(default=None, max_length=64, description="OAuth openid")
     oauth_token: Optional[str] = Field(default=None, max_length=256, description="OAuth 토큰")
-    
+    email: str = Field(default=None, max_length=64, description="이메일")
+    is_registered: bool = Field(default=False, description="유저 등록 여부, default: False")
+
     # 관계
     profile: Optional["UserProfile"] = Relationship(back_populates="user", sa_relationship_kwargs={"uselist": False}, cascade_delete=True)
     alert: Optional["UserAlert"] = Relationship(back_populates="user", sa_relationship_kwargs={"uselist": False}, cascade_delete=True)

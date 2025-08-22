@@ -56,6 +56,18 @@ class CRUDUser(CRUDBase[User, None, None]):
         db.refresh(user)
         return user
 
+    def update_registered_flag(self, db: Session, user_id: int, is_registered: bool) -> Optional[User]:
+        """유저 등록 여부 업데이트"""
+        user = self.get_by_user_id(db, user_id)
+        if user:
+            user.is_registered = is_registered
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+            return user
+        else:
+            raise ValueError(f"User with user_id {user_id} not found")
+
     def delete_user(self, db: Session, user_id: int) -> bool:
         """사용자 삭제"""
         user = self.get_by_user_id(db, user_id)
