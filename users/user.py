@@ -59,6 +59,9 @@ class UserProfile(TimestampMixin, table=True):
     user_id: int = Field(primary_key=True, foreign_key="users.user_id", description="유저 구분 ID")
     user_name: str = Field(max_length=16, description="유저명")
     phone: Optional[str] = Field(max_length=11, nullable=True, description="연락처")
+    address: Optional[str] = Field(max_length=128, nullable=True, description="주소")
+    emergency_contact: Optional[str] = Field(max_length=11, nullable=True, description="긴급 연락처")
+
     is_caregiver: bool = Field(default=False, description="보호자 여부")
     is_helper: bool = Field(default=False, description="도우미 여부")
 

@@ -5,7 +5,7 @@ from sqlmodel import Session
 from auth import get_current_user
 from common.memcache.database import memcache_client
 from common.postgres.database import get_session
-from users.user_dto import UserAlertRes, UserProfileAlertRes, UserProfileUpdateReq, UserProfileRes, UserRes
+from users.user_dto import UserAlertRes, UserProfileUpdateReq, UserProfileRes, UserRes
 from users.user_crud import user_alert_crud, user_crud, user_profile_crud
 
 from .user import User
@@ -26,6 +26,7 @@ router = APIRouter(tags=["User API"])
                         "user": {
                             "user_id": 1,
                             "user_ulid": "1234567890",
+                            "email": "test@test.com",
                             "oauth_platform": "google",
                             "openid": "1234567890",
                             "oauth_token": "1234567890",
@@ -34,6 +35,8 @@ router = APIRouter(tags=["User API"])
                         "user_profile": {
                             "user_name": "John Doe",
                             "phone": "1234567890",
+                            "address": "1234567890",
+                            "emergency_contact": "1234567890",
                             "is_caregiver": True,
                             "is_helper": False
                         },
@@ -61,7 +64,6 @@ async def get_user(
 ):
     user_profile = user_profile_crud.get_by_user_id(db, user.user_id)
     user_alert = user_alert_crud.get_by_user_id(db, user.user_id)
-    user_crud.update_registered_flag(db, user.user_id, True)
     return JSONResponse(
         status_code=200, 
         content=UserRes(
@@ -69,6 +71,8 @@ async def get_user(
             user_profile=UserProfileRes(
                 user_name=user_profile.user_name,
                 phone=user_profile.phone,
+                address=user_profile.address,
+                emergency_contact=user_profile.emergency_contact,
                 is_caregiver=user_profile.is_caregiver,
                 is_helper=user_profile.is_helper
             ),
@@ -92,6 +96,7 @@ async def get_user(
                         "user": {
                             "user_id": 1,
                             "user_ulid": "1234567890",
+                            "email": "test@test.com",
                             "oauth_platform": "google",
                             "openid": "1234567890",
                             "oauth_token": "1234567890",
@@ -100,6 +105,8 @@ async def get_user(
                         "user_profile": {
                             "user_name": "John Doe",
                             "phone": "1234567890",
+                            "address": "1234567890",
+                            "emergency_contact": "1234567890",
                             "is_caregiver": True,
                             "is_helper": False
                         },
@@ -137,6 +144,8 @@ async def update_user_profile(
             user_profile=UserProfileRes(
                 user_name=user_profile.user_name,
                 phone=user_profile.phone,
+                address=user_profile.address,
+                emergency_contact=user_profile.emergency_contact,
                 is_caregiver=user_profile.is_caregiver,
                 is_helper=user_profile.is_helper
             ),
@@ -160,6 +169,7 @@ async def update_user_profile(
                         "user": {
                             "user_id": 1,
                             "user_ulid": "1234567890",
+                            "email": "test@test.com",
                             "oauth_platform": "google",
                             "openid": "1234567890",
                             "oauth_token": "1234567890",
@@ -203,6 +213,8 @@ async def update_user_alert_fcm_token(
             user_profile=UserProfileRes(
                 user_name=user_profile.user_name,
                 phone=user_profile.phone,
+                address=user_profile.address,
+                emergency_contact=user_profile.emergency_contact,
                 is_caregiver=user_profile.is_caregiver,
                 is_helper=user_profile.is_helper
             ),
@@ -226,6 +238,7 @@ async def update_user_alert_fcm_token(
                         "user": {
                             "user_id": 1,
                             "user_ulid": "1234567890",
+                            "email": "test@test.com",
                             "oauth_platform": "google",
                             "openid": "1234567890",
                             "oauth_token": "1234567890",
@@ -269,6 +282,8 @@ async def update_user_alert(
             user_profile=UserProfileRes(
                 user_name=user_profile.user_name,
                 phone=user_profile.phone,
+                address=user_profile.address,
+                emergency_contact=user_profile.emergency_contact,
                 is_caregiver=user_profile.is_caregiver,
                 is_helper=user_profile.is_helper
             ),

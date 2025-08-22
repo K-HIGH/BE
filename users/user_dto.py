@@ -21,6 +21,8 @@ class UserProfileUpdateReq(BaseModel):
 class UserProfileRes(BaseModel):
     user_name: str
     phone: Optional[str] = None
+    address: Optional[str] = None
+    emergency_contact: Optional[str] = None
     is_caregiver: Optional[bool] = None
     is_helper: Optional[bool] = None
 
@@ -32,3 +34,11 @@ class UserRes(BaseModel):
     user: User
     user_profile: UserProfileRes
     user_alert: UserAlertRes
+
+class UserViewRes(BaseModel):
+    user_id: int
+    user_name: str
+    email: str
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    emergency_contact: Optional[str] = None
