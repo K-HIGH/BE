@@ -3,6 +3,7 @@ from sqlmodel import select
 from sqlalchemy.orm import Session
 
 from common.postgres.crud.base import CRUDBase
+from users.user import User
 from .caregiver import Caregiver
 
 
