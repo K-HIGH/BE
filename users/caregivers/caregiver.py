@@ -17,6 +17,7 @@ class Caregiver(TimestampMixin, table=True):
     caregiver_id: int = Field(primary_key=True, default=None, description="보호자 ID")
     user_id: int = Field(foreign_key="users.user_id", description="보호자 ID")
     target_id: int = Field(foreign_key="users.user_id", description="보호 대상 ID")
+    is_approved: bool = Field(default=False, nullable=True, description="승인 여부")
 
     # 관계
     user: Optional["User"] = Relationship(

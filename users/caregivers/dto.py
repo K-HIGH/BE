@@ -8,3 +8,7 @@ class CaregiverGetRes(BaseModel):
     target_id: int
     created_at: datetime
     updated_at: datetime
+
+class TakerApproveReq(BaseModel):
+    caregiver_id: int
+    is_approved: bool

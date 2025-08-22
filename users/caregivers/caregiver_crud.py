@@ -45,4 +45,36 @@ class CRUDCaregiver(CRUDBase[Caregiver, None, None]):
         else:
             raise ValueError(f"Caregiver with caregiver_id {caregiver_id} not found")
 
+class CRUDTaker(CRUDBase[Caregiver, None, None]):
+    """피보호자 CRUD 작업"""
+    
+    def get_by_target_id(self, db: Session, target_id: int) -> Caregiver:
+        """피보호자 ID로 피보호자 조회"""
+        statement = select(Caregiver).where(Caregiver.target_id == target_id)
+        return db.exec(statement).first()
+    
+    def update_is_approved(self, db: Session, caregiver_id: int, is_approved: bool) -> Caregiver:
+        """피보호자 승인 여부 업데이트"""
+        statement = select(Caregiver).where(Caregiver.caregiver_id == caregiver_id)
+        caregiver = db.exec(statement).first()
+        if caregiver:
+            caregiver.is_approved = is_approved
+            db.commit()
+            db.refresh(caregiver)
+            return caregiver
+        else:
+            raise ValueError(f"Caregiver with caregiver_id {caregiver_id} not found")
+    
+    def delete_taker_relationship(self, db: Session, caregiver_id: int) -> bool:
+        """피보호자 관계 삭제"""
+        statement = select(Caregiver).where(Caregiver.caregiver_id == caregiver_id)
+        caregiver = db.exec(statement).first()
+        if caregiver:
+            db.delete(caregiver)
+            db.commit()
+            return True
+        else:
+            raise ValueError(f"Caregiver with caregiver_id {caregiver_id} not found")
+
 caregiver_crud = CRUDCaregiver(Caregiver)
+taker_crud = CRUDTaker(Caregiver)
