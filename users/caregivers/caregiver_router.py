@@ -215,18 +215,18 @@ async def get_caregiver(
     }
 )
 async def create_caregiver(
-    target_id: int,
+    target_email: str,
     user: User = Depends(get_current_user),
     db: Session = Depends(get_session)
 ):
     """보호자 관계 생성"""
-    target = caregiver_crud.get_by_target_id(db, target_id)
+    target = user_crud.get_by_email(db, target_email)
     if not target:
         raise HTTPException(status_code=404, detail="Target not found")
     if target.user_id == user.user_id:
         raise HTTPException(status_code=409, detail="Caregiver already exists")
     
-    caregiver = caregiver_crud.create_caregiver_relationship(db, user.user_id, target_id)
+    caregiver = caregiver_crud.create_caregiver_relationship(db, user.user_id, target.user_id)
     return JSONResponse(
         status_code=200,
         content=CaregiverGetRes(

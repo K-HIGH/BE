@@ -34,6 +34,11 @@ class CRUDUser(CRUDBase[User, None, None]):
         )
         return db.exec(statement).first()
     
+    def get_by_email(self, db: Session, email: str) -> Optional[User]:
+        """이메일로 사용자 조회"""
+        statement = select(User).where(User.email == email)
+        return db.exec(statement).first()
+
     def get_with_profile(self, db: Session, user_id: int) -> Optional[User]:
         """프로필과 함께 사용자 조회"""
         statement = select(User).options(joinedload(User.profile)).where(User.user_id == user_id)
